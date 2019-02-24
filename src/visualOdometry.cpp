@@ -22,13 +22,13 @@
 using namespace cv;
 using namespace std;
 
-void featureTracking(Mat img_1, Mat img_2, vector<Point2f>& points1, vector<Point2f>& points2, vector<uchar>& status)
+void featureTracking(Mat sourceFrame, Mat targetFrame, vector<Point2f>& points1, vector<Point2f>& points2, vector<uchar>& status)
 {
     cv::Mat grey1;
-    cv::cvtColor(img_1, grey1, COLOR_BGR2GRAY);
+    cv::cvtColor(sourceFrame, grey1, COLOR_BGR2GRAY);
 
     cv::Mat grey2;
-    cv::cvtColor(img_2, grey2, COLOR_BGR2GRAY);
+    cv::cvtColor(targetFrame, grey2, COLOR_BGR2GRAY);
 
     vector<float> err;
     Size winSize=Size(31, 31);
@@ -53,11 +53,16 @@ void featureTracking(Mat img_1, Mat img_2, vector<Point2f>& points1, vector<Poin
 }
 
 
-void featureDetection(Mat frame, vector<Point2f>& points)
+void featureDetection(Mat frame, vector<Point2f>& points, std::vector<cv::Scalar> &colors)
 {
     cv::Mat grey;
     cv::cvtColor(frame, grey, COLOR_BGR2GRAY);
     cv::goodFeaturesToTrack(grey, points, 1000, 0.01, 0);
+
+    for (auto &i : points) {
+        colors.push_back(frame.at<cv::Scalar>(i.x, i.y));
+    }
+
 
 }
 
@@ -110,9 +115,14 @@ int main( int argc, char** argv )
         cv::Mat rTotal = cv::Mat::eye(3, 3, CV_64F);
         cv::Mat tTotal = cv::Mat::zeros(3, 1, CV_64F);
 
+        std::vector<cv::Point3f> points;
+        std::vector<cv::Vec4b> colors;
+
+        std::vector<cv::Scalar> tempColors;
+
         do {
             char fileName[256];
-            sprintf(fileName, "/home/victor/datasets/KITTI\ Color/01/image_2/%06d.png", i);
+            sprintf(fileName, "/home/victor/datasets/KITTI\ Color/00/image_2/%06d.png", i);
             captureFrame = imread(fileName);
 
             // capture >> captureFrame;
@@ -125,7 +135,7 @@ int main( int argc, char** argv )
 
                 if (prevFrame.empty()) {
                     frame.copyTo(prevFrame);
-                    featureDetection(prevFrame, prevFeaturePoints);
+                    featureDetection(prevFrame, prevFeaturePoints, tempColors);
                     cv::Mat renderFrame;
                     prevFrame.copyTo(renderFrame);
                     drawPoints(renderFrame, prevFeaturePoints);
@@ -137,7 +147,7 @@ int main( int argc, char** argv )
                     featureTracking(prevFrame, curFrame, prevFeaturePoints, curFeaturePoints, status);
 
                     if (prevFeaturePoints.size() < 500)	{
-                        featureDetection(prevFrame, prevFeaturePoints);
+                        featureDetection(prevFrame, prevFeaturePoints, tempColors);
                         featureTracking(prevFrame, curFrame, prevFeaturePoints, curFeaturePoints, status);
 
                     }
@@ -205,9 +215,6 @@ int main( int argc, char** argv )
 
                     cv::sfm::triangulatePoints(pts, Ps, points3d);
 
-                    std::vector<cv::Point3f> points;
-                    std::vector<cv::Vec4b> colors;
-
                     for (auto i = 0; i <points3d.cols; ++i) {
                         auto x = points3d.at<double>(0, i);
                         auto y = points3d.at<double>(1, i);
@@ -245,7 +252,7 @@ int main( int argc, char** argv )
 
                     if (!points.empty()) {
                         cv::viz::WCloud cloud(points, colors);
-                        cloud.setRenderingProperty(cv::viz::POINT_SIZE, 4);
+                        cloud.setRenderingProperty(cv::viz::POINT_SIZE, 2);
                         vizWindow.showWidget("Point cloud", cloud);
                     }
 
