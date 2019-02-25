@@ -22,6 +22,9 @@
 using namespace cv;
 using namespace std;
 
+Size winSize=Size(31, 31);
+TermCriteria termcrit=TermCriteria(TermCriteria::COUNT | TermCriteria::EPS, 20, 0.03);
+
 void featureTracking(Mat sourceFrame, Mat targetFrame, vector<Point2f>& points1, vector<Point2f>& points2, vector<uchar>& status)
 {
     cv::Mat grey1;
@@ -31,10 +34,9 @@ void featureTracking(Mat sourceFrame, Mat targetFrame, vector<Point2f>& points1,
     cv::cvtColor(targetFrame, grey2, COLOR_BGR2GRAY);
 
     vector<float> err;
-    Size winSize=Size(31, 31);
-    TermCriteria termcrit=TermCriteria(TermCriteria::COUNT | TermCriteria::EPS, 20, 0.03);
 
     calcOpticalFlowPyrLK(grey1, grey2, points1, points2, status, err, winSize, 3, termcrit, 0, 0.001);
+   // cv::cornerSubPix(grey2, points2, cv::Size(3, 3), cv::Size(), termcrit);
 
     int indexCorrection = 0;
     for( int i=0; i<status.size(); i++) {
@@ -58,6 +60,7 @@ void featureDetection(Mat frame, vector<Point2f>& points, std::vector<cv::Scalar
     cv::Mat grey;
     cv::cvtColor(frame, grey, COLOR_BGR2GRAY);
     cv::goodFeaturesToTrack(grey, points, 1000, 0.01, 0);
+    // cv::cornerSubPix(grey, points, cv::Size(3, 3), cv::Size(), termcrit);
 
     for (auto &i : points) {
         colors.push_back(frame.at<cv::Scalar>(i.x, i.y));
@@ -173,6 +176,7 @@ int main( int argc, char** argv )
 
                     f = cv::findFundamentalMat(prevFeaturePoints, curFeaturePoints, cv::noArray());
                     cv::sfm::essentialFromFundamental(f, camMatrix, camMatrix, e);
+                    // cv::findEssentialMat(prevFeaturePoints, curFeaturePoints, focal[0], pp);
 
                     std::vector<cv::Mat> rvec;
                     std::vector<cv::Mat> tvec;
