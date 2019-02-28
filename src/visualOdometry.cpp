@@ -85,7 +85,7 @@ void drawLines(Mat frame, vector<Point2f>& points1, vector<Point2f>& points2)
 
 int main( int argc, char** argv )
 {
-    cv::VideoCapture capture("/home/victor/testVideo/video.mp4");
+    cv::VideoCapture capture("/home/sheverdin/workspace/video/testVideo.mp4");
 
     if (capture.isOpened()) {
         namedWindow( "Features", WINDOW_KEEPRATIO );
@@ -125,7 +125,7 @@ int main( int argc, char** argv )
 
         do {
             char fileName[256];
-            sprintf(fileName, "/home/victor/datasets/KITTI\ Color/00/image_2/%06d.png", i);
+            sprintf(fileName, "/home/sheverdin/workspace/datasets/KITTI/Color/00/image_2/%06d.png", i);
             captureFrame = imread(fileName);
 
             // capture >> captureFrame;
@@ -255,8 +255,9 @@ int main( int argc, char** argv )
                     vizWindow.showWidget("trajectoryFrustums", trajectoryFrustums);
 
                     if (!points.empty()) {
-                        cv::viz::WCloud cloud(points, colors);
+                        cv::viz::WCloud cloud(points/*, colors*/);
                         cloud.setRenderingProperty(cv::viz::POINT_SIZE, 2);
+                        cloud.setColor(cv::viz::Color(0, 255, 255));
                         vizWindow.showWidget("Point cloud", cloud);
                     }
 
