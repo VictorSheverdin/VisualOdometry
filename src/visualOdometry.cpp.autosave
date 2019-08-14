@@ -226,7 +226,6 @@ int main( int argc, char** argv )
 
                     cv::sfm::triangulatePoints(pts, Ps, points3d);
 
-
                     points.clear();
                     colors.clear();
 
